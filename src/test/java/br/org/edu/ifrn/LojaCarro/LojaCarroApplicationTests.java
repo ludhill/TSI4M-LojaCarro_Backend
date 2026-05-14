@@ -16,7 +16,7 @@ class LojaCarroApplicationTests {
     @Test
     void simularFalhaItem3() {
 
-        assertEquals("Sucesso", "Sucesso");
+        assertEquals("Sucesso", "Falha");
 
     }
 }
