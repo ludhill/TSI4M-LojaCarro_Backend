@@ -16,26 +16,35 @@ public class CarroService {
     public CarroRepository carroRepository;
 
     public Carro save(Carro c) {
+        if (c == null || c.getModelo() == null || c.getModelo().trim().isEmpty()) {
+            throw new IllegalArgumentException("O modelo do carro não pode ser vazio!");
+        }
         return carroRepository.save(c);
     }
 
-    // Novo método para deletar por ID
+
     public void deleteById(Long id) {
+        if (!carroRepository.existsById(id)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.NOT_FOUND,
+                    "Operação inválida: O carro com o ID " + id + " não existe na base de dados."
+            );
+        }
         carroRepository.deleteById(id);
     }
 
-    // Novo método para pesquisar por ID
+
     public Optional<Carro> findById(Long id) {
         return carroRepository.findById(id);
     }
 
-    // Novo método para listar todos os carros
+
     public List<Carro> findAll() {
         return carroRepository.findAll();
     }
 
-    // Método para atualizar (usa o save existente, mas pode ser renomeado se preferir)
+
     public Carro update(Carro c) {
-        return carroRepository.save(c);  // Retorna o carro salvo para feedback
+        return this.save(c);
     }
 }
