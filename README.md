@@ -5,6 +5,38 @@
 **Projeto:** LojaCarro
 
 **Responsável:** Equipe de Engenharia de Software
+## ** Guia Rápido de Execução (Quick Start)**
+
+Siga os passos abaixo para clonar o repositório, preparar o ambiente e reproduzir os resultados de testes localmente em sua máquina.
+
+### **1\. Clonar o Repositório e Navegar ao Projeto**
+
+Abra o seu terminal (Bash, PowerShell ou terminal embutido do IntelliJ) e execute:
+
+\# Clona o repositório do projeto  
+    git clone https://github.com/ludhill/TSI4M-LojaCarro_Backend.git
+
+\# Entra na pasta raiz do projeto  
+    cd LojaCarro
+
+### **2\. Executar os Testes Automatizados via Maven**
+
+Para compilar a aplicação e rodar toda a suíte de testes de integração com o banco H2 em memória, execute o comando abaixo:
+
+    mvn clean test
+
+### **3\. Resultados de Execução Esperados**
+
+Após a finalização do processo, o Maven exibirá o relatório de execução direto no console:
+
+    \[INFO\] Running br.org.edu.ifrn.LojaCarro.CarroIntegrationTest  
+    \[INFO\] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.821 s \-- in br.org.edu.ifrn.LojaCarro.CarroIntegrationTest  
+    \[INFO\]   
+    \[INFO\] Results:  
+    \[INFO\]   
+    \[INFO\] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0
+
+**Dica:** Caso queira executar visualmente no **IntelliJ**, abra a classe CarroIntegrationTest.java e clique no botão verde com formato de **Play** (localizado na linha 14, ao lado da declaração da classe). O painel de testes apresentará todos os cenários com o check verde de sucesso\!
 
 ## **1\. O que é um teste de integração?**
 
@@ -61,56 +93,56 @@ O teste deveDarErroAoSalvarObjetoInvalido\_ValidacaoCamadaServico simula um cada
 
 Para fazer o teste passar de forma robusta e garantir que a aplicação não aceite dados corrompidos na base, implementamos a validação de segurança ativa dentro do **CarroService.java**:
 
-public Carro save(Carro c) {  
-// Validação ativa contra formatos inconsistentes de dados  
-if (c \== null || c.getModelo() \== null || c.getModelo().trim().isEmpty()) {  
-throw new IllegalArgumentException("O modelo do carro não pode ser vazio\!");  
-}  
-return carroRepository.save(c);  
-}
+    public Carro save(Carro c) {  
+        // Validação ativa contra formatos inconsistentes de dados  
+        if (c \== null || c.getModelo() \== null || c.getModelo().trim().isEmpty()) {  
+            throw new IllegalArgumentException("O modelo do carro não pode ser vazio\!");  
+        }  
+        return carroRepository.save(c);  
+    }
 
 ### **Exemplo 2: Tratamento de Deleção de Registro Inexistente**
 
 No **CarroService.java**, o método de deleção foi programado para validar a existência do ID no banco e lançar uma exceção de status HTTP amigável para o cliente:
 
-public void deleteById(Long id) {  
-// 1\. Verifica se o registro realmente existe antes de tentar deletar  
-if (\!carroRepository.existsById(id)) {  
-// 2\. Lança uma ResponseStatusException amigável com código HTTP 404  
-throw new org.springframework.web.server.ResponseStatusException(  
-org.springframework.http.HttpStatus.NOT\_FOUND,   
-"Operação inválida: O carro com o ID " \+ id \+ " não existe na base de dados."  
-);  
-}  
-// 3\. Se tudo estiver correto, apaga o registro  
-carroRepository.deleteById(id);  
-}
+    public void deleteById(Long id) {  
+        // 1\. Verifica se o registro realmente existe antes de tentar deletar  
+        if (\!carroRepository.existsById(id)) {  
+            // 2\. Lança uma ResponseStatusException amigável com código HTTP 404  
+            throw new org.springframework.web.server.ResponseStatusException(  
+            org.springframework.http.HttpStatus.NOT\_FOUND,   
+            "Operação inválida: O carro com o ID " \+ id \+ " não existe na base de dados."  
+            );  
+        }  
+        // 3\. Se tudo estiver correto, apaga o registro  
+        carroRepository.deleteById(id);  
+    }
 
 E no arquivo **CarroIntegrationTest.java**, o teste de integração valida esse comportamento capturando o código de retorno HTTP exato gerado por essa exceção:
 
-@Test  
-public void deveDarErro\_AoTentarDeletarCarroInexistente() {  
-Long idInexistente \= 9999L; // ID simulado
-
-    ResponseEntity\<String\> resposta \= restTemplate.exchange(  
-            getBaseUrl() \+ "/" \+ idInexistente,  
-            HttpMethod.DELETE,  
-            null,  
-            String.class  
-    );
-
-    // Valida que a nossa exceção no Service resultou em uma resposta 404 NOT FOUND para o cliente  
-    assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.NOT\_FOUND);  
-}
+    @Test  
+    public void deveDarErro\_AoTentarDeletarCarroInexistente() {  
+    Long idInexistente \= 9999L; // ID simulado
+    
+        ResponseEntity\<String\> resposta \= restTemplate.exchange(  
+                getBaseUrl() \+ "/" \+ idInexistente,  
+                HttpMethod.DELETE,  
+                null,  
+                String.class  
+        );
+    
+        // Valida que a nossa exceção no Service resultou em uma resposta 404 NOT FOUND para o cliente  
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.NOT\_FOUND);  
+    }
 
 ## **7\. Automação de Testes e Pipeline CI (GitHub Actions)**
 
 O arquivo .github/workflows/ci.yml do projeto foi mapeado para orquestrar e validar a integridade do código remotamente.
 
-Toda vez que a equipe realiza um git push para as branches principais, o GitHub cria uma máquina virtual temporária, instala o JDK 18 e o Maven, e executa:
+Toda vez que a equipe realiza um git push para as branches principais, o GitHub cria uma máquina virtual temporária, instala o JDK 17 e o Maven, e executa:
 
-mvn clean test
+    mvn clean test
 
-Como os nossos testes de integração utilizam o banco de dados **H2 em memória**, os 8 testes rodam e passam com sucesso dentro dos servidores do GitHub, sem necessitar de qualquer infraestrutura física externa, garantindo que o projeto só possa ser colocado em produção após a validação total das regras de negócio mapeadas neste relatório.
+Como os nossos testes de integração utilizam o banco de dados **H2 em memória**, os 11 testes rodam e passam com sucesso dentro dos servidores do GitHub, sem necessitar de qualquer infraestrutura física externa, garantindo que o projeto só possa ser colocado em produção após a validação total das regras de negócio mapeadas neste relatório.
 
 *Todos os dados de testes e estados do banco H2 são apagados automaticamente ao final da execução da suite de testes.*
