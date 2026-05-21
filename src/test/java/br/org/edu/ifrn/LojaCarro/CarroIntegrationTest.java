@@ -192,4 +192,16 @@ public class CarroIntegrationTest {
         assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(resposta.getBody()).isNotNull();
     }
+
+    @Test
+    @org.springframework.test.context.jdbc.Sql("/import-carros.sql")
+    public void deveListarOsDezCarrosCadastradosPeloScriptSql() {
+
+        ResponseEntity<Carro[]> resposta = restTemplate.getForEntity(getBaseUrl(), Carro[].class);
+
+        assertThat(resposta.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(resposta.getBody()).isNotNull();
+
+        assertThat(resposta.getBody().length).isEqualTo(10);
+    }
 }
