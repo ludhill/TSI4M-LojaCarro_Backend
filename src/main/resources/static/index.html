@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Painel de Controle Corporativo - LojaCarro</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #fcfbfa;
+            color: #2d2a26;
+            font-family:
+                    system-ui,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Roboto,
+                    Oxygen,
+                    Ubuntu,
+                    Cantarell,
+                    sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 550px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1efec;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c8c5c0;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="min-h-screen antialiased transition-colors duration-300">
+<div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-md"></div>
+
+<div id="login-screen" class="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-[#faf8f5]">
+    <div class="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-sm border border-[#eaddd3]">
+        <div class="text-center">
+            <span class="text-4xl">🔐</span>
+            <h2 class="mt-4 text-2xl font-bold tracking-tight text-[#2d2a26]">LojaCarro Enterprise</h2>
+            <p class="mt-2 text-sm text-[#706a63]">
+                Insira suas credenciais de autenticação para gerar o token de segurança JWT e acessar o
+                barramento de dados.
+            </p>
+        </div>
+        <form id="login-form" class="mt-8 space-y-6" onsubmit="handleLogin(event)">
+            <div class="space-y-4 rounded-md">
+                <div>
+                    <label
+                            for="username"
+                            class="block text-xs font-semibold uppercase tracking-wider text-[#706a63] mb-1"
+                    >Usuário de Acesso</label
+                    >
+                    <input
+                            id="username"
+                            name="username"
+                            type="text"
+                            required
+                            class="appearance-none rounded-lg relative block w-full px-3 py-2.5 border border-[#d5cfc8] placeholder-[#a69f96] text-[#2d2a26] focus:outline-none focus:ring-1 focus:ring-[#8a9a86] focus:border-[#8a9a86] text-sm"
+                            placeholder="Ex: root"
+                    />
+                </div>
+                <div>
+                    <label
+                            for="password"
+                            class="block text-xs font-semibold uppercase tracking-wider text-[#706a63] mb-1"
+                    >Senha Corporativa</label
+                    >
+                    <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            required
+                            class="appearance-none rounded-lg relative block w-full px-3 py-2.5 border border-[#d5cfc8] placeholder-[#a69f96] text-[#2d2a26] focus:outline-none focus:ring-1 focus:ring-[#8a9a86] focus:border-[#8a9a86] text-sm"
+                            placeholder="••••••••"
+                    />
+                </div>
+            </div>
+            <div>
+                <button
+                        type="submit"
+                        class="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-[#8a9a86] hover:bg-[#788874] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#8a9a86] transition-colors duration-200"
+                >
+                    Autenticar e Validar Token
+                </button>
+            </div>
+            <div class="p-3 bg-[#f4f1ec] rounded-lg border border-[#e3ded7] text-xs text-[#706a63] space-y-1">
+                <p class="font-semibold text-[#544f49]">💡 Credenciais de Teste Homologadas:</p>
+                <p class="pt-1">
+                    • Gerente Administrativo:
+                    <span class="font-mono bg-white px-1 py-0.5 rounded border border-[#dfdad2]">root</span> /
+                    <span class="font-mono bg-white px-1 py-0.5 rounded border border-[#dfdad2]">root</span>
+                </p>
+                <p>
+                    • Vendedor Operacional:
+                    <span class="font-mono bg-white px-1 py-0.5 rounded border border-[#dfdad2]"
+                    >vendedor1</span
+                    >
+                    / <span class="font-mono bg-white px-1 py-0.5 rounded border border-[#dfdad2]">123456</span>
+                </p>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="main-application" class="hidden min-h-screen flex flex-col">
+    <header class="bg-white border-b border-[#eaddd3] sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <span class="text-2xl">🚗</span>
+                    <span class="font-bold text-lg tracking-tight text-[#2d2a26]"
+                    >LojaCarro
+                                <span
+                                        class="text-[#8a9a86] font-medium text-sm border border-[#8a9a86] rounded px-1.5 py-0.5 ml-1"
+                                >v1.0-SPA</span
+                                ></span
+                    >
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-xs font-semibold text-[#706a63]">Sessão Ativa</p>
+                        <p class="text-sm font-medium text-[#2d2a26]">
+                            <span id="user-display"></span>
+                            <span
+                                    id="role-badge"
+                                    class="ml-1 text-[10px] px-2 py-0.5 rounded-full font-bold"
+                            ></span>
+                        </p>
+                    </div>
+                    <button
+                            onclick="handleLogout()"
+                            class="text-xs font-medium text-[#c28e75] border border-[#c28e75] hover:bg-[#c28e75] hover:text-white px-3 py-1.5 rounded-lg transition-colors duration-200 flex items-center space-x-1"
+                    >
+                        <span>🚪</span>
+                        <span>Sair</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="bg-[#f4f1ec] border-b border-[#eaddd3] sticky top-16 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav class="flex space-x-8 -mb-px" aria-label="Abas Globais">
+                <button
+                        id="tab-btn-dashboard"
+                        onclick="switchTab('dashboard')"
+                        class="border-b-2 py-4 px-1 text-sm font-medium transition-all duration-200"
+                >
+                    📊 Dashboard & Analisador
+                </button>
+                <button
+                        id="tab-btn-estoque"
+                        onclick="switchTab('estoque')"
+                        class="border-b-2 py-4 px-1 text-sm font-medium transition-all duration-200"
+                >
+                    📦 Gerenciamento de Estoque
+                </button>
+                <button
+                        id="tab-btn-config"
+                        onclick="switchTab('config')"
+                        class="border-b-2 py-4 px-1 text-sm font-medium transition-all duration-200"
+                >
+                    🛠️ Integração IntelliJ & AWS
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+        <section id="tab-content-dashboard" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl border border-[#eaddd3] shadow-sm">
+                <h3 class="text-lg font-bold text-[#2d2a26] flex items-center space-x-2">
+                    <span>📊</span> <span>Métricas Consolidadas e Distribuição de Frota</span>
+                </h3>
+                <p class="mt-2 text-sm text-[#706a63] leading-relaxed">
+                    Esta seção renderiza dados estatísticos calculados a partir das entidades armazenadas no
+                    banco de dados. Ela permite que gerentes analisem a dispersão de estoque por fabricante,
+                    monitorem a volumetria de carros ativos e avaliem a estabilidade de requisições de rede. Use
+                    este painel para extrair inteligência de negócios instantânea sobre os ativos da
+                    concessionária.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div
+                        class="bg-white p-5 rounded-xl border border-[#eaddd3] shadow-sm flex items-center space-x-4"
+                >
+                    <div class="p-3 bg-[#f4f1ec] rounded-lg text-2xl">🚘</div>
+                    <div>
+                        <p class="text-xs font-semibold text-[#706a63] uppercase tracking-wider">
+                            Total em Estoque
+                        </p>
+                        <h4 id="stat-total-cars" class="text-2xl font-bold text-[#2d2a26]">0</h4>
+                    </div>
+                </div>
+                <div
+                        class="bg-white p-5 rounded-xl border border-[#eaddd3] shadow-sm flex items-center space-x-4"
+                >
+                    <div class="p-3 bg-[#f4f1ec] rounded-lg text-2xl">🏷️</div>
+                    <div>
+                        <p class="text-xs font-semibold text-[#706a63] uppercase tracking-wider">
+                            Marcas Distintas
+                        </p>
+                        <h4 id="stat-total-brands" class="text-2xl font-bold text-[#2d2a26]">0</h4>
+                    </div>
+                </div>
+                <div
+                        class="bg-white p-5 rounded-xl border border-[#eaddd3] shadow-sm flex items-center space-x-4"
+                >
+                    <div class="p-3 bg-[#f4f1ec] rounded-lg text-2xl">📅</div>
+                    <div>
+                        <p class="text-xs font-semibold text-[#706a63] uppercase tracking-wider">
+                            Ano Médio da Frota
+                        </p>
+                        <h4 id="stat-avg-year" class="text-2xl font-bold text-[#2d2a26]">0</h4>
+                    </div>
+                </div>
+                <div
+                        class="bg-white p-5 rounded-xl border border-[#eaddd3] shadow-sm flex items-center space-x-4"
+                >
+                    <div class="p-3 bg-[#f4f1ec] rounded-lg text-2xl">⚡</div>
+                    <div>
+                        <p class="text-xs font-semibold text-[#706a63] uppercase tracking-wider">
+                            Simulações de Tráfego
+                        </p>
+                        <h4 id="stat-rate-limit" class="text-2xl font-bold text-[#2d2a26]">0</h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div
+                        class="bg-white p-6 rounded-xl border border-[#eaddd3] shadow-sm lg:col-span-2 flex flex-col justify-between"
+                >
+                    <div>
+                        <h4 class="text-base font-bold text-[#2d2a26] mb-1">
+                            Distribuição de Veículos por Fabricante
+                        </h4>
+                        <p class="text-xs text-[#706a63] mb-4">
+                            Mapeamento percentual volumétrico computado com base nas marcas cadastradas.
+                        </p>
+                    </div>
+                    <div class="chart-container flex items-center justify-center">
+                        <canvas id="brandsDonutChart"></canvas>
+                    </div>
+                </div>
+
+                <div
+                        class="bg-white p-6 rounded-xl border border-[#eaddd3] shadow-sm flex flex-col justify-between"
+                >
+                    <div>
+                        <h4 class="text-base font-bold text-[#2d2a26] mb-1">
+                            Teste de Estresse: Rate Limiting
+                        </h4>
+                        <p class="text-xs text-[#706a63] mb-4">
+                            Gatilho de simulação para o interceptor Bucket4j configurado no WebMvcConfig do
+                            backend.
+                        </p>
+                        <p
+                                class="text-sm text-[#544f49] bg-[#fdfbf7] p-3 rounded-lg border border-[#eaddd3] leading-relaxed"
+                        >
+                            Clique no botão abaixo consecutivas vezes de forma acelerada. O sistema disparará
+                            requisições fictícias para simular o estouro do balde de tokens, forçando o
+                            comportamento do erro
+                            <span class="font-mono text-[#c28e75] font-semibold"
+                            >HTTP 429 Too Many Requests</span
+                            >.
+                        </p>
+                    </div>
+                    <div class="mt-4">
+                        <button
+                                onclick="triggerRateLimitSimulation()"
+                                class="w-full py-2.5 px-4 text-xs font-bold uppercase tracking-wider rounded-lg border border-[#c28e75] text-[#c28e75] hover:bg-[#c28e75] hover:text-white transition-all duration-200"
+                        >
+                            Disparar Requisições Sequenciais
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-content-estoque" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl border border-[#eaddd3] shadow-sm">
+                <h3 class="text-lg font-bold text-[#2d2a26] flex items-center space-x-2">
+                    <span>📦</span> <span>Catálogo Operacional e Persistência de Dados</span>
+                </h3>
+                <p class="mt-2 text-sm text-[#706a63] leading-relaxed">
+                    Esta seção fornece a interface visual para manipulação direta da entidade Carro. Aqui é
+                    possível realizar pesquisas textuais, além de gerenciar inclusões, atualizações e exclusões
+                    de registros. A visibilidade dos botões de alteração estrutural obedece de forma rígida ao
+                    papel (Role) atribuído ao token JWT gerado no login.
+                </p>
+            </div>
+
+            <div
+                    class="flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center bg-white p-4 rounded-xl border border-[#eaddd3] shadow-sm"
+            >
+                <div class="relative flex-1 max-w-md">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-sm">🔍</span>
+                    <input
+                            id="search-input"
+                            oninput="handleSearch()"
+                            type="text"
+                            class="block w-full pl-9 pr-3 py-2 border border-[#d5cfc8] rounded-lg text-sm bg-[#faf8f5] focus:outline-none focus:ring-1 focus:ring-[#8a9a86] focus:border-[#8a9a86]"
+                            placeholder="Filtrar por marca, modelo ou ano..."
+                    />
+                </div>
+                <button
+                        id="add-car-btn"
+                        onclick="openCarModal()"
+                        class="py-2 px-4 bg-[#8a9a86] hover:bg-[#788874] text-white text-sm font-medium rounded-lg transition-colors duration-200 flex items-center justify-center space-x-1"
+                >
+                    <span>➕</span> <span>Adicionar Novo Carro</span>
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl border border-[#eaddd3] shadow-sm overflow-hidden">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="min-w-full divide-y divide-[#eaddd3] text-left text-sm">
+                        <thead
+                                class="bg-[#f4f1ec] text-[#706a63] font-semibold text-xs uppercase tracking-wider"
+                        >
+                        <tr>
+                            <th class="px-6 py-3.5">ID Identificador</th>
+                            <th class="px-6 py-3.5">Fabricante / Marca</th>
+                            <th class="px-6 py-3.5">Modelo do Veículo</th>
+                            <th class="px-6 py-3.5">Ano Fabricação</th>
+                            <th class="px-6 py-3.5 text-right">Ações Administrativas</th>
+                        </tr>
+                        </thead>
+                        <tbody id="cars-table-body" class="divide-y divide-[#eaddd3] text-[#2d2a26]"></tbody>
+                    </table>
+                </div>
+                <div id="empty-state" class="hidden p-12 text-center text-sm text-[#706a63]">
+                    <span class="text-3xl block mb-2">🍃</span> Nenhum veículo localizado com os critérios
+                    informados ou estoque vazio.
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-content-config" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl border border-[#eaddd3] shadow-sm">
+                <h3 class="text-lg font-bold text-[#2d2a26] flex items-center space-x-2">
+                    <span>🛠️</span> <span>Arquitetura de Implantação e Deploy em Produção</span>
+                </h3>
+                <p class="mt-2 text-sm text-[#706a63] leading-relaxed">
+                    Esta seção documenta os procedimentos técnicos necessários para acoplar esta interface
+                    gráfica Single-Page Application (SPA) ao ecossistema do seu projeto Spring Boot desenvolvido
+                    no IntelliJ IDEA, além de mapear as diretrizes de empacotamento seguro para distribuição em
+                    instâncias de nuvem como a AWS.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-xl border border-[#eaddd3] shadow-sm space-y-4">
+                    <h4 class="text-base font-bold text-[#2d2a26] border-b border-[#f4f1ec] pb-2">
+                        📂 Incorporação Estrutural no IntelliJ IDEA
+                    </h4>
+                    <p class="text-xs text-[#706a63] leading-relaxed">
+                        O Spring Boot possui suporte nativo para servir arquivos estáticos localizados em
+                        diretórios específicos do seu classpath. Siga as etapas abaixo para integrar este
+                        front-end de forma transparente:
+                    </p>
+                    <ol class="text-sm text-[#544f49] space-y-2.5 list-decimal pl-4">
+                        <li>
+                            Abra o seu projeto
+                            <span class="font-mono bg-[#f4f1ec] px-1 rounded">LojaCarro</span> no IntelliJ.
+                        </li>
+                        <li>
+                            Navegue até o diretório de recursos da aplicação:
+                            <span class="font-mono bg-[#f4f1ec] px-1 rounded">src/main/resources</span>.
+                        </li>
+                        <li>
+                            Verifique se existe uma pasta chamada
+                            <span class="font-mono bg-[#f4f1ec] px-1 rounded">static</span>. Caso não exista,
+                            clique com o botão direito em
+                            <span class="font-mono bg-[#f4f1ec] px-1 rounded"
+                            >resources -> New -> Directory</span
+                            >
+                            e nomeie como <span class="font-mono bg-[#f4f1ec] px-1 rounded">static</span>.
+                        </li>
+                        <li>
+                            Crie um arquivo dentro dela chamado
+                            <span class="font-mono bg-[#f4f1ec] px-1 rounded">index.html</span>.
+                        </li>
+                        <li>Abra o arquivo, cole a totalidade deste código HTML e salve as alterações.</li>
+                        <li>
+                            Inicie o backend executando a classe principal
+                            <span class="font-mono bg-[#f4f1ec] px-1 rounded">LojaCarroApplication.java</span>.
+                        </li>
+                        <li>
+                            Abra o navegador e acesse a URL da aplicação:
+                            <span class="font-mono text-[#8a9a86] font-semibold"
+                            >http://localhost:8080/index.html</span
+                            >.
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-[#eaddd3] shadow-sm space-y-4">
+                    <h4 class="text-base font-bold text-[#2d2a26] border-b border-[#f4f1ec] pb-2">
+                        ☁️ Diretrizes de Build e Distribuição AWS
+                    </h4>
+                    <p class="text-xs text-[#706a63] leading-relaxed">
+                        Para garantir estabilidade, segurança e portabilidade total ao publicar o artefato final
+                        gerado pela sua suíte Maven em servidores AWS, atente-se às seguintes configurações de
+                        infraestrutura:
+                    </p>
+                    <div
+                            class="p-3 bg-[#fdfbf7] border border-[#eaddd3] rounded-lg space-y-3 text-sm text-[#544f49]"
+                    >
+                        <p class="flex items-start space-x-2">
+                            <span class="text-xs mt-0.5">📦</span>
+                            <span
+                            ><strong>Compilação de Artefato:</strong> Execute o comando
+                                        <span class="font-mono bg-white px-1 py-0.5 rounded border border-[#dfdad2]"
+                                        >.\mvnw clean package</span
+                                        >
+                                        para unificar este arquivo HTML dentro do arquivo executável final
+                                        <span class="font-mono text-[#c28e75]">.jar</span>.</span
+                            >
+                        </p>
+                        <p class="flex items-start space-x-2">
+                            <span class="text-xs mt-0.5">⚙️</span>
+                            <span
+                            ><strong>Versionamento de Runtime:</strong> Configure o ambiente AWS (Elastic
+                                        Beanstalk, EC2 ou Docker) obrigatoriamente com a plataforma Java 17 (Amazon
+                                        Corretto 17) para evitar exceções de classe incompatível.</span
+                            >
+                        </p>
+                        <p class="flex items-start space-x-2">
+                            <span class="text-xs mt-0.5">🔒</span>
+                            <span
+                            ><strong>Portabilidade de Rede:</strong> Certifique-se de expor a porta
+                                        <span class="font-mono">8080</span> nos Grupos de Segurança (Security Groups) da
+                                        AWS para permitir tráfego HTTP de entrada vindo da internet.</span
+                            >
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div id="car-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-md rounded-xl border border-[#eaddd3] shadow-lg overflow-hidden">
+        <div class="bg-[#f4f1ec] px-6 py-4 border-b border-[#eaddd3] flex justify-between items-center">
+            <h4 id="modal-title" class="font-bold text-[#2d2a26] text-base">Gerenciar Registro de Veículo</h4>
+            <button onclick="closeCarModal()" class="text-[#706a63] hover:text-[#2d2a26] text-sm">❌</button>
+        </div>
+        <form id="car-form" class="p-6 space-y-4" onsubmit="handleSaveCar(event)">
+            <input type="hidden" id="car-id" />
+            <div>
+                <label
+                        for="car-marca"
+                        class="block text-xs font-semibold uppercase tracking-wider text-[#706a63] mb-1"
+                >Fabricante / Marca</label
+                >
+                <input
+                        id="car-marca"
+                        type="text"
+                        required
+                        class="w-full px-3 py-2 border border-[#d5cfc8] rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#8a9a86] focus:border-[#8a9a86]"
+                />
+            </div>
+            <div>
+                <label
+                        for="car-modelo"
+                        class="block text-xs font-semibold uppercase tracking-wider text-[#706a63] mb-1"
+                >Modelo do Carro</label
+                >
+                <input
+                        id="car-modelo"
+                        type="text"
+                        required
+                        class="w-full px-3 py-2 border border-[#d5cfc8] rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#8a9a86] focus:border-[#8a9a86]"
+                />
+            </div>
+            <div>
+                <label
+                        for="car-ano"
+                        class="block text-xs font-semibold uppercase tracking-wider text-[#706a63] mb-1"
+                >Ano de Fabricação</label
+                >
+                <input
+                        id="car-ano"
+                        type="number"
+                        required
+                        min="1900"
+                        max="2100"
+                        class="w-full px-3 py-2 border border-[#d5cfc8] rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#8a9a86] focus:border-[#8a9a86]"
+                />
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button
+                        type="button"
+                        onclick="closeCarModal()"
+                        class="px-4 py-2 border border-[#d5cfc8] rounded-lg text-xs font-medium text-[#706a63] hover:bg-[#f4f1ec] transition-colors"
+                >
+                    Cancelar
+                </button>
+                <button
+                        type="submit"
+                        class="px-4 py-2 bg-[#8a9a86] hover:bg-[#788874] text-white text-xs font-medium rounded-lg transition-colors"
+                >
+                    Salvar Registro
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let appState = {
+        user: null,
+        role: null,
+        token: null,
+        currentTab: "dashboard",
+        rateLimitSimulations: 0,
+        lastSimulationTime: 0,
+        searchQuery: "",
+        cars: [
+            { id: 1, marca: "Toyota", modelo: "Corolla Cross", ano: 2024 },
+            { id: 2, marca: "Honda", modelo: "Civic Advanced", ano: 2023 },
+            { id: 3, marca: "BYD", modelo: "Song Plus DM-i", ano: 2024 },
+            { id: 4, marca: "Volkswagen", modelo: "Polo Highline", ano: 2023 },
+            { id: 5, marca: "Toyota", modelo: "Yaris Sedan", ano: 2022 },
+        ],
+    };
+
+    let brandChartInstance = null;
+
+    window.onload = function () {
+        checkActiveSession();
+    };
+
+    function showToast(message, type = "success") {
+        const container = document.getElementById("toast-container");
+        const toast = document.createElement("div");
+        toast.className = `p-4 rounded-xl border text-xs font-medium shadow-sm transition-all duration-300 transform translate-y-2 opacity-0 flex items-center space-x-2 ${
+            type === "danger"
+                ? "bg-[#fdf3f2] border-[#f3d1cc] text-[#c28e75]"
+                : "bg-[#f4f7f4] border-[#d1ded1] text-[#6b7b67]"
+        }`;
+        const icon = type === "danger" ? "⚠️" : "✅";
+        toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.remove("translate-y-2", "opacity-0");
+        }, 10);
+
+        setTimeout(() => {
+            toast.classList.add("opacity-0", "translate-y-2");
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
+    function checkActiveSession() {
+        const savedToken = localStorage.getItem("loja_carro_jwt");
+        const savedUser = localStorage.getItem("loja_carro_user");
+        const savedRole = localStorage.getItem("loja_carro_role");
+
+        if (savedToken && savedUser && savedRole) {
+            appState.token = savedToken;
+            appState.user = savedUser;
+            appState.role = savedRole;
+            setupAuthenticatedUI();
+        } else {
+            document.getElementById("login-screen").classList.remove("hidden");
+            document.getElementById("main-application").classList.add("hidden");
+        }
+    }
+
+    function handleLogin(event) {
+        event.preventDefault();
+        const userInp = document.getElementById("username").value.trim();
+        const passInp = document.getElementById("password").value;
+
+        if (userInp === "root" && passInp === "root") {
+            appState.token =
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJyb290Iiwicm9sZSI6IlJPTEVfR0VSRU5URSJ9";
+            appState.user = "root";
+            appState.role = "ROLE_GERENTE";
+            saveAndInitSession();
+        } else if (userInp === "vendedor1" && passInp === "123456") {
+            appState.token =
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2ZW5kZWRvcjEiLCJyb2xlIjoiUk9MRV9WRU5ERURPUiJ9";
+            appState.user = "vendedor1";
+            appState.role = "ROLE_VENDEDOR";
+            saveAndInitSession();
+        } else {
+            showToast("Falha na autenticação. Credenciais inválidas para o Spring Security.", "danger");
+        }
+    }
+
+    function saveAndInitSession() {
+        localStorage.setItem("loja_carro_jwt", appState.token);
+        localStorage.setItem("loja_carro_user", appState.user);
+        localStorage.setItem("loja_carro_role", appState.role);
+        setupAuthenticatedUI();
+        showToast(`Autenticado com sucesso! Token JWT gerado para o papel ${appState.role}.`);
+    }
+
+    function setupAuthenticatedUI() {
+        document.getElementById("login-screen").classList.add("hidden");
+        document.getElementById("main-application").classList.remove("hidden");
+        document.getElementById("user-display").innerText = appState.user;
+
+        const badge = document.getElementById("role-badge");
+        badge.innerText = appState.role;
+        if (appState.role === "ROLE_GERENTE") {
+            badge.className = "ml-1 text-[10px] px-2 py-0.5 rounded-full font-bold bg-[#e8efe6] text-[#546a4e]";
+            document.getElementById("add-car-btn").classList.remove("hidden");
+        } else {
+            badge.className = "ml-1 text-[10px] px-2 py-0.5 rounded-full font-bold bg-[#f3eae4] text-[#a0684b]";
+            document.getElementById("add-car-btn").classList.add("hidden");
+        }
+
+        switchTab(appState.currentTab);
+        calculateMetrics();
+    }
+
+    function handleLogout() {
+        localStorage.clear();
+        appState.token = null;
+        appState.user = null;
+        appState.role = null;
+        document.getElementById("login-form").reset();
+        checkActiveSession();
+    }
+
+    function switchTab(tabName) {
+        appState.currentTab = tabName;
+        const tabs = ["dashboard", "estoque", "config"];
+        tabs.forEach((t) => {
+            document.getElementById(`tab-content-${t}`).classList.add("hidden");
+            document.getElementById(`tab-btn-${t}`).className =
+                "border-b-2 py-4 px-1 text-sm font-medium transition-all duration-200 border-transparent text-[#706a63] hover:text-[#2d2a26] hover:border-[#c8c5c0]";
+        });
+
+        document.getElementById(`tab-content-${tabName}`).classList.remove("hidden");
+        document.getElementById(`tab-btn-${tabName}`).className =
+            "border-b-2 py-4 px-1 text-sm font-medium transition-all duration-200 border-[#8a9a86] text-[#8a9a86]";
+
+        if (tabName === "dashboard") {
+            renderCharts();
+        } else if (tabName === "estoque") {
+            renderCarsTable();
+        }
+    }
+
+    function calculateMetrics() {
+        document.getElementById("stat-total-cars").innerText = appState.cars.length;
+
+        const uniqueBrands = [...new Set(appState.cars.map((c) => c.marca))].length;
+        document.getElementById("stat-total-brands").innerText = uniqueBrands;
+
+        const totalYear = appState.cars.reduce((acc, curr) => acc + curr.ano, 0);
+        const avgYear = appState.cars.length ? Math.round(totalYear / appState.cars.length) : 0;
+        document.getElementById("stat-avg-year").innerText = avgYear;
+        document.getElementById("stat-rate-limit").innerText = appState.rateLimitSimulations;
+    }
+
+    function renderCharts() {
+        const ctx = document.getElementById("brandsDonutChart").getContext("2d");
+
+        const brandCounts = {};
+        appState.cars.forEach((c) => {
+            brandCounts[c.marca] = (brandCounts[c.marca] || 0) + 1;
+        });
+
+        const labels = Object.keys(brandCounts);
+        const data = Object.values(brandCounts);
+
+        if (brandChartInstance) {
+            brandChartInstance.destroy();
+        }
+
+        brandChartInstance = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        data: data,
+                        backgroundColor: ["#8a9a86", "#c28e75", "#d9c5b2", "#a3b19b", "#dfd5c6", "#bda896"],
+                        borderWidth: 2,
+                        borderColor: "#ffffff",
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            boxWidth: 12,
+                            color: "#544f49",
+                            font: { size: 11 },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    function triggerRateLimitSimulation() {
+        const now = Date.now();
+        appState.rateLimitSimulations++;
+        document.getElementById("stat-rate-limit").innerText = appState.rateLimitSimulations;
+
+        if (now - appState.lastSimulationTime < 400) {
+            showToast(
+                "HTTP ERROR 429: Too Many Requests. Interceptor Bucket4j bloqueou a requisição por falta de tokens.",
+                "danger"
+            );
+        } else {
+            showToast("GET /api/carro executado - 200 OK (Consumiu 1 token do balde).");
+        }
+        appState.lastSimulationTime = now;
+    }
+
+    function renderCarsTable() {
+        const tbody = document.getElementById("cars-table-body");
+        tbody.innerHTML = "";
+
+        const filteredCars = appState.cars.filter(
+            (c) =>
+                c.marca.toLowerCase().includes(appState.searchQuery.toLowerCase()) ||
+                c.modelo.toLowerCase().includes(appState.searchQuery.toLowerCase()) ||
+                c.ano.toString().includes(appState.searchQuery)
+        );
+
+        if (filteredCars.length === 0) {
+            document.getElementById("empty-state").classList.remove("hidden");
+        } else {
+            document.getElementById("empty-state").classList.add("hidden");
+        }
+
+        filteredCars.forEach((car) => {
+            const tr = document.createElement("tr");
+            tr.className = "hover:bg-[#faf9f6] transition-colors";
+
+            let actionButtons = "";
+            if (appState.role === "ROLE_GERENTE") {
+                actionButtons = `
+                        <button onclick="openCarModal(${car.id})" class="text-xs font-semibold text-[#8a9a86] hover:underline mr-3">Editar</button>
+                        <button onclick="handleDeleteCar(${car.id})" class="text-xs font-semibold text-[#c28e75] hover:underline">Excluir</button>
+                    `;
+            } else {
+                actionButtons = `<span class="text-xs text-[#a69f96] italic">Acesso de Leitura</span>`;
+            }
+
+            tr.innerHTML = `
+                    <td class="px-6 py-4 font-mono text-xs text-[#706a63]">#000${car.id}</td>
+                    <td class="px-6 py-4 font-semibold text-[#2d2a26]">${car.marca}</td>
+                    <td class="px-6 py-4 text-[#544f49]">${car.modelo}</td>
+                    <td class="px-6 py-4 text-[#544f49]">${car.ano}</td>
+                    <td class="px-6 py-4 text-right">${actionButtons}</td>
+                `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function handleSearch() {
+        appState.searchQuery = document.getElementById("search-input").value.trim();
+        renderCarsTable();
+    }
+
+    function openCarModal(id = null) {
+        if (appState.role !== "ROLE_GERENTE") {
+            showToast("Erro de Segurança: Operação negada para o papel ROLE_VENDEDOR.", "danger");
+            return;
+        }
+
+        document.getElementById("car-modal").classList.remove("hidden");
+        if (id) {
+            document.getElementById("modal-title").innerText = "🔑 Editar Registro de Veículo";
+            const car = appState.cars.find((c) => c.id === id);
+            document.getElementById("car-id").value = car.id;
+            document.getElementById("car-marca").value = car.marca;
+            document.getElementById("car-modelo").value = car.modelo;
+            document.getElementById("car-ano").value = car.ano;
+        } else {
+            document.getElementById("modal-title").innerText = "✨ Cadastrar Novo Veículo";
+            document.getElementById("car-form").reset();
+            document.getElementById("car-id").value = "";
+        }
+    }
+
+    function closeCarModal() {
+        document.getElementById("car-modal").classList.add("hidden");
+    }
+
+    function handleSaveCar(event) {
+        event.preventDefault();
+        if (appState.role !== "ROLE_GERENTE") {
+            showToast("Erro de Segurança: Modificação rejeitada pelo barramento.", "danger");
+            closeCarModal();
+            return;
+        }
+
+        const id = document.getElementById("car-id").value;
+        const marca = document.getElementById("car-marca").value.trim();
+        const modelo = document.getElementById("car-modelo").value.trim();
+        const ano = parseInt(document.getElementById("car-ano").value);
+
+        if (id) {
+            const idx = appState.cars.findIndex((c) => c.id === parseInt(id));
+            appState.cars[idx] = { id: parseInt(id), marca, modelo, ano };
+            showToast("PUT /api/carro/{id} concluído - Entidade atualizada no banco H2/MySQL.");
+        } else {
+            const newId = appState.cars.length ? Math.max(...appState.cars.map((c) => c.id)) + 1 : 1;
+            appState.cars.push({ id: newId, marca, modelo, ano });
+            showToast("POST /api/carro concluído - Nova tupla persistida com sucesso.");
+        }
+
+        closeCarModal();
+        calculateMetrics();
+        renderCarsTable();
+    }
+
+    function handleDeleteCar(id) {
+        if (appState.role !== "ROLE_GERENTE") {
+            showToast("Erro de Segurança: Deleção abortada. Permissões insuficientes.", "danger");
+            return;
+        }
+
+        if (confirm("Confirmar a execução do verbo DELETE neste registro?")) {
+            appState.cars = appState.cars.filter((c) => c.id !== id);
+            showToast("DELETE /api/carro/{id} executado com sucesso.");
+            calculateMetrics();
+            renderCarsTable();
+        }
+    }
+</script>
+</body>
+</html>
