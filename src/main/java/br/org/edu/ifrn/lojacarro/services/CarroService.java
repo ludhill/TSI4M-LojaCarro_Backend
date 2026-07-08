@@ -1,8 +1,8 @@
 
-package br.org.edu.ifrn.LojaCarro.services;
+package br.org.edu.ifrn.lojacarro.services;
 
-import br.org.edu.ifrn.LojaCarro.model.Carro;
-import br.org.edu.ifrn.LojaCarro.repository.CarroRepository;
+import br.org.edu.ifrn.lojacarro.model.Carro;
+import br.org.edu.ifrn.lojacarro.repository.CarroRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

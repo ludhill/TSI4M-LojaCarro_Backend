@@ -1,4 +1,4 @@
-package br.org.edu.ifrn.LojaCarro;
+package br.org.edu.ifrn.lojacarro;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

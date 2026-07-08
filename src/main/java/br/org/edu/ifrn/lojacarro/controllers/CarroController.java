@@ -1,7 +1,7 @@
-package br.org.edu.ifrn.LojaCarro.controllers;
+package br.org.edu.ifrn.lojacarro.controllers;
 
-import br.org.edu.ifrn.LojaCarro.model.Carro;
-import br.org.edu.ifrn.LojaCarro.services.CarroService;
+import br.org.edu.ifrn.lojacarro.model.Carro;
+import br.org.edu.ifrn.lojacarro.services.CarroService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

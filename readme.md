@@ -34,7 +34,7 @@ LojaCarro
 ├── src  
 │   ├── main  
 │   │   ├── java  
-│   │   │   └── br.org.edu.ifrn.LojaCarro  
+│   │   │   └── br.org.edu.ifrn.lojacarro  
 │   │   │       ├── controllers  
 │   │   │       │   ├── CarroController.java  
 │   │   │       │   └── AuthController.java             \<-- Endpoint de login e geração de Token  
@@ -56,7 +56,7 @@ LojaCarro
 │   │       └── application.properties                  \<-- Configurações de banco MySQL e limites  
 │   └── test  
 │       └── java  
-│           └── br.org.edu.ifrn.LojaCarro  
+│           └── br.org.edu.ifrn.lojacarro  
 │               ├── controllers  
 │               │   └── CarroControllerTest.java        \<-- Testes mockados de API  
 │               ├── services  

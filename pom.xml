@@ -142,18 +142,18 @@
 				<configuration>
 
 					<targetClasses>
-						<param>br.org.edu.ifrn.LojaCarro.controllers.*</param>
-						<param>br.org.edu.ifrn.LojaCarro.services.*</param>
-						<param>br.org.edu.ifrn.LojaCarro.model.*</param>
+						<param>br.org.edu.ifrn.lojacarro.controllers.*</param>
+						<param>br.org.edu.ifrn.lojacarro.services.*</param>
+						<param>br.org.edu.ifrn.lojacarro.model.*</param>
 					</targetClasses>
 
 					<excludedClasses>
-						<param>br.org.edu.ifrn.LojaCarro.security.*</param>
-						<param>br.org.edu.ifrn.LojaCarro.LojaCarroApplication</param>
+						<param>br.org.edu.ifrn.lojacarro.security.*</param>
+						<param>br.org.edu.ifrn.lojacarro.LojaCarroApplication</param>
 					</excludedClasses>
 
 					<targetTests>
-						<param>br.org.edu.ifrn.LojaCarro.*Test</param>
+						<param>br.org.edu.ifrn.lojacarro.*Test</param>
 					</targetTests>
 
 					<threads>1</threads>
@@ -210,6 +210,32 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.12</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.sonarsource.scanner.maven</groupId>
+				<artifactId>sonar-maven-plugin</artifactId>
+				<version>5.0.0.4389</version>
 			</plugin>
 
 		</plugins>

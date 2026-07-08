@@ -1,6 +1,6 @@
-package br.org.edu.ifrn.LojaCarro.controllers;
-import br.org.edu.ifrn.LojaCarro.model.Usuario;
-import br.org.edu.ifrn.LojaCarro.repository.UsuarioRepository;
+package br.org.edu.ifrn.lojacarro.controllers;
+import br.org.edu.ifrn.lojacarro.model.Usuario;
+import br.org.edu.ifrn.lojacarro.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

@@ -1,0 +1,26 @@
+name: Java Quality and Verification Pipeline
+
+on:
+  push:
+    branches: [ "master", "main", "feature-melhorias-qa" ]
+  pull_request:
+    branches: [ "master", "main" ]
+
+jobs:
+  verify:
+    name: Code Build and Test Execution
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 18
+        uses: actions/setup-java@v4
+        with:
+          java-version: '18'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run Maven Verification
+        run: mvn clean verify

@@ -1,7 +1,7 @@
-package br.org.edu.ifrn.LojaCarro.controllers;
-import br.org.edu.ifrn.LojaCarro.model.Carro;
-import br.org.edu.ifrn.LojaCarro.security.JwtFilter;
-import br.org.edu.ifrn.LojaCarro.services.CarroService;
+package br.org.edu.ifrn.lojacarro.controllers;
+import br.org.edu.ifrn.lojacarro.model.Carro;
+import br.org.edu.ifrn.lojacarro.security.JwtFilter;
+import br.org.edu.ifrn.lojacarro.services.CarroService;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

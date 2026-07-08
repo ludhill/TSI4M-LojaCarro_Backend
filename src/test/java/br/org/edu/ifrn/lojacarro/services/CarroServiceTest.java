@@ -1,7 +1,7 @@
-package br.org.edu.ifrn.LojaCarro.services;
+package br.org.edu.ifrn.lojacarro.services;
 
-import br.org.edu.ifrn.LojaCarro.model.Carro;
-import br.org.edu.ifrn.LojaCarro.repository.CarroRepository;
+import br.org.edu.ifrn.lojacarro.model.Carro;
+import br.org.edu.ifrn.lojacarro.repository.CarroRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

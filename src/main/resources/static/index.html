@@ -593,25 +593,38 @@
         }
     }
 
-    function handleLogin(event) {
+    async function handleLogin(event) {
         event.preventDefault();
-        const userInp = document.getElementById("username").value.trim();
-        const passInp = document.getElementById("password").value;
+        const userInp = document.getElementById('username').value.trim();
+        const passInp = document.getElementById('password').value;
 
-        if (userInp === "root" && passInp === "root") {
-            appState.token =
-                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJyb290Iiwicm9sZSI6IlJPTEVfR0VSRU5URSJ9";
-            appState.user = "root";
-            appState.role = "ROLE_GERENTE";
-            saveAndInitSession();
-        } else if (userInp === "vendedor1" && passInp === "123456") {
-            appState.token =
-                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2ZW5kZWRvcjEiLCJyb2xlIjoiUk9MRV9WRU5ERURPUiJ9";
-            appState.user = "vendedor1";
-            appState.role = "ROLE_VENDEDOR";
-            saveAndInitSession();
-        } else {
-            showToast("Falha na autenticação. Credenciais inválidas para o Spring Security.", "danger");
+        try {
+
+            const response = await fetch('/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: userInp, password: passInp })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+
+
+                appState.token = data.token;
+                appState.user = userInp;
+
+
+                appState.role = userInp === 'root' ? 'ROLE_GERENTE' : 'ROLE_VENDEDOR';
+
+                saveAndInitSession();
+
+
+                renderCarsTable();
+            } else {
+                showToast('Falha na autenticação. Credenciais rejeitadas pelo Java.', 'danger');
+            }
+        } catch (error) {
+            showToast('Erro de rede ao tentar conectar com o servidor.', 'danger');
         }
     }
 
@@ -744,44 +757,53 @@
         appState.lastSimulationTime = now;
     }
 
-    function renderCarsTable() {
-        const tbody = document.getElementById("cars-table-body");
-        tbody.innerHTML = "";
+    async function renderCarsTable() {
+        const tbody = document.getElementById('cars-table-body');
+        tbody.innerHTML = '';
 
-        const filteredCars = appState.cars.filter(
-            (c) =>
-                c.marca.toLowerCase().includes(appState.searchQuery.toLowerCase()) ||
-                c.modelo.toLowerCase().includes(appState.searchQuery.toLowerCase()) ||
-                c.ano.toString().includes(appState.searchQuery)
+        try {
+
+            const response = await fetch('/api/carro', {
+                headers: { 'Authorization': `Bearer ${appState.token}` }
+            });
+
+            if (!response.ok) throw new Error('Erro ao buscar dados do backend');
+
+
+            appState.cars = await response.json();
+        } catch (error) {
+            console.error(error);
+            showToast("Erro ao conectar com a API do Java.", "danger");
+        }
+
+        const filteredCars = appState.cars.filter(c =>
+            c.marca.toLowerCase().includes(appState.searchQuery.toLowerCase()) ||
+            c.modelo.toLowerCase().includes(appState.searchQuery.toLowerCase()) ||
+            c.ano.toString().includes(appState.searchQuery)
         );
 
         if (filteredCars.length === 0) {
-            document.getElementById("empty-state").classList.remove("hidden");
+            document.getElementById('empty-state').classList.remove('hidden');
         } else {
-            document.getElementById("empty-state").classList.add("hidden");
+            document.getElementById('empty-state').classList.add('hidden');
         }
 
-        filteredCars.forEach((car) => {
-            const tr = document.createElement("tr");
+        filteredCars.forEach(car => {
+            const tr = document.createElement('tr');
             tr.className = "hover:bg-[#faf9f6] transition-colors";
 
-            let actionButtons = "";
-            if (appState.role === "ROLE_GERENTE") {
-                actionButtons = `
-                        <button onclick="openCarModal(${car.id})" class="text-xs font-semibold text-[#8a9a86] hover:underline mr-3">Editar</button>
-                        <button onclick="handleDeleteCar(${car.id})" class="text-xs font-semibold text-[#c28e75] hover:underline">Excluir</button>
-                    `;
-            } else {
-                actionButtons = `<span class="text-xs text-[#a69f96] italic">Acesso de Leitura</span>`;
-            }
+            let actionButtons = appState.role === 'ROLE_GERENTE' ? `
+            <button onclick="openCarModal(${car.id})" class="text-xs font-semibold text-[#8a9a86] hover:underline mr-3">Editar</button>
+            <button onclick="handleDeleteCar(${car.id})" class="text-xs font-semibold text-[#c28e75] hover:underline">Excluir</button>
+        ` : `<span class="text-xs text-[#a69f96] italic">Acesso de Leitura</span>`;
 
             tr.innerHTML = `
-                    <td class="px-6 py-4 font-mono text-xs text-[#706a63]">#000${car.id}</td>
-                    <td class="px-6 py-4 font-semibold text-[#2d2a26]">${car.marca}</td>
-                    <td class="px-6 py-4 text-[#544f49]">${car.modelo}</td>
-                    <td class="px-6 py-4 text-[#544f49]">${car.ano}</td>
-                    <td class="px-6 py-4 text-right">${actionButtons}</td>
-                `;
+            <td class="px-6 py-4 font-mono text-xs text-[#706a63]">#000${car.id}</td>
+            <td class="px-6 py-4 font-semibold text-[#2d2a26]">${car.marca}</td>
+            <td class="px-6 py-4 text-[#544f49]">${car.modelo}</td>
+            <td class="px-6 py-4 text-[#544f49]">${car.ano}</td>
+            <td class="px-6 py-4 text-right">${actionButtons}</td>
+        `;
             tbody.appendChild(tr);
         });
     }
@@ -816,32 +838,46 @@
         document.getElementById("car-modal").classList.add("hidden");
     }
 
-    function handleSaveCar(event) {
+    async function handleSaveCar(event) {
         event.preventDefault();
-        if (appState.role !== "ROLE_GERENTE") {
-            showToast("Erro de Segurança: Modificação rejeitada pelo barramento.", "danger");
+        if (appState.role !== 'ROLE_GERENTE') {
+            showToast("Erro de Segurança: Modificação rejeitada.", "danger");
             closeCarModal();
             return;
         }
 
-        const id = document.getElementById("car-id").value;
-        const marca = document.getElementById("car-marca").value.trim();
-        const modelo = document.getElementById("car-modelo").value.trim();
-        const ano = parseInt(document.getElementById("car-ano").value);
+        const id = document.getElementById('car-id').value;
+        const marca = document.getElementById('car-marca').value.trim();
+        const modelo = document.getElementById('car-modelo').value.trim();
+        const ano = parseInt(document.getElementById('car-ano').value);
 
-        if (id) {
-            const idx = appState.cars.findIndex((c) => c.id === parseInt(id));
-            appState.cars[idx] = { id: parseInt(id), marca, modelo, ano };
-            showToast("PUT /api/carro/{id} concluído - Entidade atualizada no banco H2/MySQL.");
-        } else {
-            const newId = appState.cars.length ? Math.max(...appState.cars.map((c) => c.id)) + 1 : 1;
-            appState.cars.push({ id: newId, marca, modelo, ano });
-            showToast("POST /api/carro concluído - Nova tupla persistida com sucesso.");
+        const carroDado = { marca, modelo, ano };
+
+
+        const url = id ? `/api/carro/${id}` : '/api/carro';
+        const method = id ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${appState.token}`
+                },
+                body: JSON.stringify(carroDado)
+            });
+
+            if (response.ok) {
+                showToast(id ? "Veículo atualizado no MySQL!" : "Novo veículo gravado no MySQL!");
+                closeCarModal();
+                calculateMetrics();
+                renderCarsTable();
+            } else {
+                showToast("O servidor Java recusou a operação.", "danger");
+            }
+        } catch (error) {
+            showToast("Erro de rede ao tentar conectar com o Spring Boot.", "danger");
         }
-
-        closeCarModal();
-        calculateMetrics();
-        renderCarsTable();
     }
 
     function handleDeleteCar(id) {

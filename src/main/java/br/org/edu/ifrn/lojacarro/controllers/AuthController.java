@@ -1,6 +1,6 @@
-package br.org.edu.ifrn.LojaCarro.controllers;
+package br.org.edu.ifrn.lojacarro.controllers;
 
-import br.org.edu.ifrn.LojaCarro.security.JwtUtil;
+import br.org.edu.ifrn.lojacarro.security.JwtUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +11,8 @@ import java.util.Map;
 @RequestMapping("/auth")
 public class AuthController {
 
+    private static final String MASTER_KEY = "root";
+
     private final JwtUtil jwtUtil;
 
     public AuthController(JwtUtil jwtUtil) {
@@ -19,11 +21,11 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> credentials) {
-        String username = credentials.get("username");
-        String password = credentials.get("password");
+        String userParam = credentials.get("username");
+        String passParam = credentials.get("password");
 
-        if ("root".equals(username) && "root".equals(password)) {
-            String token = jwtUtil.generateToken(username);
+        if (MASTER_KEY.equals(userParam) && MASTER_KEY.equals(passParam)) {
+            String token = jwtUtil.generateToken(userParam);
             return ResponseEntity.ok(Map.of("token", token));
         }
 

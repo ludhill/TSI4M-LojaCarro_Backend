@@ -1,4 +1,4 @@
-package br.org.edu.ifrn.LojaCarro.security;
+package br.org.edu.ifrn.lojacarro.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,6 +32,7 @@ public class SecurityConfig {
                                 SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/index.html", "/api/auth/**").permitAll()
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/usuarios")

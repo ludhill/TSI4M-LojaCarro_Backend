@@ -1,4 +1,4 @@
-package br.org.edu.ifrn.LojaCarro.config;
+package br.org.edu.ifrn.lojacarro.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
