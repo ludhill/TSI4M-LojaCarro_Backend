@@ -2,7 +2,7 @@ name: Java Quality and Verification Pipeline
 
 on:
   push:
-    branches: [ "master", "main", "feature-melhorias-qa" ]
+    branches: ["atividade-qualidade-codigo" ]
   pull_request:
     branches: [ "master", "main" ]
 
