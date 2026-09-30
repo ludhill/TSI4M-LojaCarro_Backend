@@ -4,12 +4,12 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 
 @Entity
+@Table(name = "carro")
 public class Carro {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
 
     @NotBlank(message = "O modelo é obrigatório")
     @Size(min = 2, max = 50, message = "O modelo deve ter entre 2 e 50 caracteres")
