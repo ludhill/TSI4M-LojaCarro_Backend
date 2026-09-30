@@ -130,6 +130,30 @@ Para empacotar a aplicação completa (com o servidor Tomcat embutido e todas as
 ⚠️ **IMPORTANTE PARA IMPLANTAÇÃO NA AWS:**  
 Ao configurar o seu ambiente na AWS, selecione **obrigatoriamente a plataforma Java 17** (ex: *Amazon Corretto 17*). O Spring Boot 3.x não aceita Java 8 e falhará com erro wrong version 61.0, should be 52.0 se a versão configurada na nuvem for obsoleta.
 
+## 🛡️ Auditoria, Segurança e Rastreabilidade
+
+A aplicação conta com um sistema completo de auditoria em duas camadas (banco de dados e requisições HTTP) e controle de acesso baseado em papéis (RBAC).
+
+### 1. Auditoria de Alterações na Base de Dados (JaVers Framework)
+Todas as operações de escrita na entidade `Carro` são auditadas automaticamente via `@JaversSpringDataAuditable` e vinculadas ao utilizador autenticado no JWT (`AuthorProvider`).
+
+- **O que é registrado:**
+   - **Autor:** Usuário logado (`gerente1`, `vendedor1`, etc.).
+   - **Data/Hora:** Timestamp exato da modificação.
+   - **Diffs (Diferenças):** Valor exato antes e depois da alteração em cada campo.
+
+> **Exemplo de Histórico de Auditoria (JaVers JSON):**
+```json
+{
+  "changeType": "ValueChange",
+  "globalId": "br.org.edu.ifrn.lojacarro.model.Carro/1",
+  "property": "preco",
+  "left": 75000.00,
+  "right": 69900.00,
+  "author": "vendedor1",
+  "commitDate": "2026-09-30T11:55:00"
+}
+
 [image1]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADQAAAAWCAYAAACPHL/WAAAAg0lEQVR4XmNgGAWjYBSMgpEAwoH4OhBnoEsMZSDEAPHQCSDugvKHDQB5DBRjw9JjoBhbCcTKaHJDGrgxDFOPgTz0mWGIewpWWAz5PAVyOMgDQ744HzYeAeULUB4BZX5QRTukAawUA9GjYBTQAYAKAlByIxYPegAqBEB5iFg8pCvWIQUAMtQf7cze4g0AAAAASUVORK5CYII=>
 
 [image2]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACYAAAAZCAYAAABdEVzWAAABsklEQVR4Xu3VYVHDQBCG4dOABTRgAQtYwAIWcIAEJOAABzjAAAIgz2S+stk2TTvDD37kndlpc7e3++3t5TLGzs4md5Pd9sHG1vyfcjPZ+2Qvk71N9ricPkD455j9z8LhaczBBL1fTh8wnqT8O89jFhYkj0BrGZ+vyR6K30lSZV38MY4TmxfQvDWvY/arVXuWOCiCAGacZQM24ShARf+/x29Sv0T11tiRKsSa+ux/3X1xejGr5Ex0JHEWQJDn3mJriQtdaBeWHbwIzpL6TSUWqyxo25ow44FfbVM9b9Ze1MKgbdokgYq1VsDsFrqAkPEITqvEIDKtv6qFlSqOqawGuVQYrMuLFIisLSRcm2vxR9QqWQTWCq8R1iGotpBIRpT1q7tosh5Yu5eEhCLPPciWsN5CYmocopNjQb8WKpLm8BJ+SsDaTgY7VdckTiU5FvQKKoLYcqhsTVh9eyvW9GvoYmEQuLYShHpDq5B+R/GRxEHv9BYGvlWYjqX4I/JBzVljgvaE/LwY5nPPrQXtLQyE5rOGfgGfhANHgnqlIVeBA7v2qhvvLayYV5SNOOe3s7Pzb/gBr9uOQRs/Kx8AAAAASUVORK5CYII=>
