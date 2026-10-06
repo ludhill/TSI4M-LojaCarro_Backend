@@ -1,4 +1,4 @@
-# **LojaCarro Backend \- Sistema de Gerenciamento de Veículos**
+# **LojaCarro Backend \ MS CARROS**
 
 Este projeto é uma API REST robusta desenvolvida em **Java** com o framework **Spring Boot**, projetada sob os princípios da engenharia de software moderna. A aplicação conta com um CRUD completo de veículos, controle estrito de segurança, autenticação baseada em tokens **JWT**, limitação de requisições de tráfego (*Rate Limiting*) e uma pirâmide abrangente de testes automatizados (unitários, de integração, de mutação e cobertura).
 
