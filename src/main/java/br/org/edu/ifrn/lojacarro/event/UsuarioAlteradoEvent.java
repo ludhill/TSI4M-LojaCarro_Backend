@@ -1,5 +1,6 @@
 package br.org.edu.ifrn.lojacarro.event;
 
+@SuppressWarnings("unused")
 public class UsuarioAlteradoEvent {
     private final Long idUsuario;
     private final String nome;
