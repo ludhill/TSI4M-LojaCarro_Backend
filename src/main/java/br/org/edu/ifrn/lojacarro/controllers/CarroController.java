@@ -1,5 +1,6 @@
 package br.org.edu.ifrn.lojacarro.controllers;
 
+import br.org.edu.ifrn.lojacarro.mensageria.Enviar;
 import br.org.edu.ifrn.lojacarro.model.Carro;
 import br.org.edu.ifrn.lojacarro.services.CarroService;
 import jakarta.validation.Valid;
@@ -50,6 +51,9 @@ public class CarroController {
                 c.getModelo());
 
         Carro saved = carroService.save(c);
+
+        // Dispara mensagem assíncrona para a fila 'preco' do ms-usuarios
+        Enviar.enviarMensagem("minha_fila_resposta,12345", "preco");
 
         return ResponseEntity.ok(saved);
     }
@@ -105,6 +109,9 @@ public class CarroController {
 
         log.info("{} listando carros",
                 obterDadosUsuarioLogado());
+
+        // Teste de envio de mensagem ao listar carros
+        Enviar.enviarMensagem("minha_fila_resposta,12345", "preco");
 
         List<Carro> carros =
                 carroService.findAll();
